@@ -1,60 +1,70 @@
-use std::collections::{HashMap, HashSet};
 mod smart_house;
 
-use crate::smart_house::structs::structs::{
-    BorrowingDeviceInfoProvider, OwningDeviceInfoProvider, Room, SmartSocket, SmartThermometer,
-};
-use smart_house::smart_house::SmartHouse;
+fn main() {}
 
-fn main() {
-    let socket1 = SmartSocket {
-        name: "Socket one".to_string(),
-        state: false,
-    };
-    let socket2 = SmartSocket {
-        name: "Socket two".to_string(),
-        state: true,
-    };
-    let thermo = SmartThermometer {
-        name: "Smart thermometer".to_string(),
-        state: true,
-        temperature: -23,
+#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, HashSet};
+
+    use crate::smart_house::smart_house::SmartHouse;
+    use crate::smart_house::structs::structs::{
+        BorrowingDeviceInfoProvider, OwningDeviceInfoProvider, Room, SmartSocket, SmartThermometer,
     };
 
-    let mut bedroom_devices = HashSet::new();
-    let mut bathroom_devices = HashSet::new();
+    #[test]
+    fn example() {
+        let socket1 = SmartSocket {
+            name: "Socket one".to_string(),
+            state: false,
+        };
+        let socket2 = SmartSocket {
+            name: "Socket two".to_string(),
+            state: true,
+        };
+        let thermo = SmartThermometer {
+            name: "Smart thermometer".to_string(),
+            state: true,
+            temperature: -23,
+        };
 
-    bedroom_devices.insert(String::from("socket"));
-    bedroom_devices.insert(String::from("thermometer"));
+        let mut bedroom_devices = HashSet::new();
+        let mut bathroom_devices = HashSet::new();
 
-    bathroom_devices.insert(String::from("thermometer"));
+        bedroom_devices.insert(String::from("socket"));
+        bedroom_devices.insert(String::from("thermometer"));
 
-    let bedroom = Room {
-        devices: bedroom_devices,
-    };
+        bathroom_devices.insert(String::from("thermometer"));
 
-    let bathroom = Room {
-        devices: bathroom_devices,
-    };
+        let bedroom = Room {
+            devices: bedroom_devices,
+        };
 
-    let mut rooms = HashMap::new();
+        let bathroom = Room {
+            devices: bathroom_devices,
+        };
 
-    rooms.insert(String::from("Bedroom"), bedroom);
-    rooms.insert(String::from("Bathroom"), bathroom);
+        let mut rooms = HashMap::new();
 
-    let house = SmartHouse::new(rooms);
+        rooms.insert(String::from("Bedroom"), bedroom);
+        rooms.insert(String::from("Bathroom"), bathroom);
 
-    let info_provider_1 = OwningDeviceInfoProvider { socket: socket1 };
+        let house = SmartHouse::new(rooms);
 
-    let report1 = house.create_report(&info_provider_1);
+        let info_provider_1 = OwningDeviceInfoProvider { socket: socket1 };
 
-    let info_provider_2 = BorrowingDeviceInfoProvider {
-        socket: &socket2,
-        thermo: &thermo,
-    };
+        let report1 = house.create_report(&info_provider_1);
 
-    let report2 = house.create_report(&info_provider_2);
+        let info_provider_2 = BorrowingDeviceInfoProvider {
+            socket: &socket2,
+            thermo: &thermo,
+        };
 
-    println!("Report #1: {report1}");
-    println!("Report #2: {report2}");
+        let report2 = house.create_report(&info_provider_2);
+
+        assert_eq!(report1, "Device: Socket one, state: false".to_string());
+        assert_eq!(
+            report2,
+            "SOCKET - Device: Socket two, state: true \r\n           THERMO - Device: Smart thermometer, state: true, temperature: -23".to_string()
+        );
+    }
 }
